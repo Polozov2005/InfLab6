@@ -14,11 +14,11 @@ def solve():
     solve = sy.integrate(f(x), (x, x_min, x_max))
     return solve
 
-### Построение графика
+### Настройки графика
 import matplotlib.pyplot as plt
 import locale
-def plotting():
-    global x_min, x_max, A, alpha, m
+def plotting_settings():
+    global x_min, x_max, A, alpha, m, fig, ax
 
     # Настройки графика
     fig, ax = plt.subplots()
@@ -44,11 +44,12 @@ def plotting():
     ax.tick_params(axis='x', colors=ax_color)
     ax.tick_params(axis='y', colors=ax_color)
 
-    # Постройка графика
-    x = np.linspace(x_min, x_max, 1000)
-    ax.plot(x, f(x), color=bluecolor)
+### Построение интеграла
+def plotting_integral():
+    global x_min, x_max, A, alpha, m, fig, ax
 
     # Откладывание интеграла в виде пунктирной прямой
+    x = np.linspace(x_min, x_max, 1000)    
     y = solve() + x*0
     ax.plot(x, y, '--', color=bluecolor)
 
@@ -57,6 +58,21 @@ def plotting():
     # Сохранение файла
     fig.set_size_inches(7.2, 7.2)
     fig.savefig('graph.png', dpi=100)
+
+### Построение нового графика поверх старого
+def plotting_new():
+    global x_min, x_max, A, alpha, m, fig, ax
+
+    # Постройка графика
+    x = np.linspace(x_min, x_max, 1000)
+    ax.plot(x, f(x), color=bluecolor)
+
+    plt.ylim(0)
+
+    # Сохранение файла
+    fig.set_size_inches(7.2, 7.2)
+    fig.savefig('graph.png', dpi=100)
+
 
 ### Создание интерфейса
 from tkinter import *
@@ -88,7 +104,7 @@ for column in range(1, 2+1): root.columnconfigure(index=column, weight=1)
 initial_graph = PhotoImage(file="initial_graph.png")
 canvas_graph = Canvas(width=720, height=720, background=background_root, highlightthickness=0)
 canvas_graph.create_image(360, 360, image=initial_graph)
-canvas_graph.grid(row=0, column=0, rowspan=8)
+canvas_graph.grid(row=0, column=0, rowspan=10)
 
 # Вывод интеграла
 image_integral = PhotoImage(file="integral.png")
@@ -196,6 +212,34 @@ entry_x_max = Entry(validate="key",
 entry_x_max.insert(0, "1")
 entry_x_max.grid(row=5, column=2)
 
+## Вывод флажков
+# Для построения значения интеграла
+enabled_checkbutton_integral = IntVar()
+checkbutton_integral = Checkbutton(text='Отложить значение интеграла', 
+                                   variable=enabled_checkbutton_integral,
+                                   background=background_root,
+                                   foreground=foreground_root,
+                                   activebackground=background_root,
+                                   activeforeground=foreground_root,
+                                   font=('Arial', 12, 'bold'),
+                                   selectcolor=background_entry,
+                                   )
+checkbutton_integral.grid(row=6, column=1, columnspan=2, sticky='w')
+
+# Для построения нового графика поверх старого
+enabled_checkbutton_new = IntVar()
+checkbutton_new = Checkbutton(text='Не удалять предыдущий график', 
+                              variable=enabled_checkbutton_new,
+                              background=background_root,
+                              foreground=foreground_root,
+                              activebackground=background_root,
+                              activeforeground=foreground_root,
+                              font=('Arial', 12, 'bold'),
+                              selectcolor=background_entry
+                              )
+checkbutton_new.grid(row=7, column=1, columnspan=2, sticky='w')
+
+
 ## Вывод кнопок
 # Для очищения полей ввода
 def click_clear():
@@ -218,7 +262,7 @@ btn_clear = Button(text='C',
                    font=('Arial', 16, 'bold'),
                    relief=SUNKEN
                    )
-btn_clear.grid(row=6, column=1)
+btn_clear.grid(row=8, column=1)
 
 # Для расчёта
 def click_solve():
@@ -229,7 +273,11 @@ def click_solve():
     x_min = float(entry_x_min.get())
     x_max = float(entry_x_max.get())
     label_solve["text"] = solve()
-    plotting()
+    if enabled_checkbutton_new.get() == 0:
+        plotting_settings()
+    plotting_new()
+    if enabled_checkbutton_integral.get() == 1: 
+        plotting_integral()
     graph = PhotoImage(file="graph.png")
     canvas_graph.create_image(360, 360, image=graph)
 btn_solve = Button(text="Результат",
@@ -246,7 +294,7 @@ btn_solve = Button(text="Результат",
                    font=('Arial', 16, 'bold'),
                    relief=SUNKEN
                    )
-btn_solve.grid(row=6, column=2)
+btn_solve.grid(row=8, column=2)
 
 # Вывод результата
 label_solve = Label(
@@ -259,7 +307,8 @@ label_solve = Label(
     width=20,
     font=(font_root, fontsize_root, 'bold')
     )
-label_solve.grid(row=7, column=1, columnspan=2)
+label_solve.grid(row=9, column=1, columnspan=2)
 
 # Вывод окна
+plotting_settings()
 root.mainloop()
